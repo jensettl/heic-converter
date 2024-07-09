@@ -15,7 +15,6 @@ tkinter.Tk().withdraw()
 def convert_files(files):
     """Converts HEIC files to JPG format."""
     for file in files:
-        register_heif_opener()
         img = Image.open(file)
         output_file = os.path.splitext(file)[0] + ".jpg"
         img.save(output_file, "JPEG")
@@ -25,11 +24,13 @@ def convert_files(files):
 def convert_folder(input_folder):
     """Converts all HEIC files in a folder to JPG format."""
     for filename in os.listdir(input_folder):
-        register_heif_opener()  # Needed to open HEIC files
-        input_path = os.path.join(input_folder, filename)  # Full path to file
+        if not filename.lower().endswith(".heic"):
+            logging.info(f"{filename} is not a HEIC file. Skipping...")
+            continue
 
-        # Create output folder if it doesn't exist
+        input_path = os.path.join(input_folder, filename)  # Full path to file
         output_folder = os.path.join(input_folder, "converted_jpgs")
+
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
 
@@ -48,7 +49,7 @@ def main():
     logging.info("=====================================")
     logging.info("HEIC to JPG Converter")
     logging.info("=====================================")
-
+    register_heif_opener()
     # Ask user for input
     while True:
         input_type = input(
