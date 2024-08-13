@@ -12,64 +12,78 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 tkinter.Tk().withdraw()
 
 
-def convert_files(files):
-    """Converts HEIC files to JPG format."""
+def convert_files(files: list) -> None:
+    """Iterates through a list of files and converts them to JPG format and saves them in the same directory."""
+
     for file in files:
         img = Image.open(file)
-        output_file = os.path.splitext(file)[0] + ".jpg"
-        img.save(output_file, "JPEG")
-        logging.info(f"{file} converted to {output_file}")
+        destFilePath = os.path.splitext(file)[0] + ".jpg"
+        img.save(destFilePath, "JPEG")
+        logging.info(f"{file} converted to {destFilePath}")
 
 
-def convert_folder(input_folder):
+def convert_folder(inputFolder) -> None:
     """Converts all HEIC files in a folder to JPG format."""
-    for filename in os.listdir(input_folder):
-        if not filename.lower().endswith(".heic"):
-            logging.info(f"{filename} is not a HEIC file. Skipping...")
+
+    for file in os.listdir(inputFolder):
+        # Skip if not a HEIC file
+        if not file.lower().endswith(".heic"):
+            logging.info(f"{file} is not a HEIC file. Skipping...")
             continue
 
-        input_path = os.path.join(input_folder, filename)  # Full path to file
-        output_folder = os.path.join(input_folder, "converted_jpgs")
+        filePath = os.path.join(inputFolder, file)
+        destFilePath = os.path.join(inputFolder, "converted_jpgs")
 
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
+        if not os.path.exists(destFilePath):
+            os.makedirs(destFilePath)
 
-        output_file = os.path.join(
-            output_folder, os.path.splitext(filename)[0] + ".jpg"
-        )
-        img = Image.open(input_path.replace("\\", "/"))
+        output_file = os.path.join(destFilePath, os.path.splitext(file)[0] + ".jpg")
+        img = Image.open(filePath.replace("\\", "/"))
         img.save(output_file, "JPEG")
-        logging.info(f"{filename} converted to {output_file}")
+        logging.info(f"{file} converted to {output_file}")
 
     logging.info("Conversion complete.")
 
 
 def main():
     """Main function that asks user for input and handles files and folders."""
-    logging.info("=====================================")
-    logging.info("HEIC to JPG Converter")
-    logging.info("=====================================")
-    register_heif_opener()
-    # Ask user for input
+    register_heif_opener()  # Register the HEIF file format with PIL
+
+    print(
+        """
+          =====================================
+            HEIC to JPG Converter
+          =====================================
+          """
+    )
+
     while True:
         input_type = input(
             "Would you like to convert a folder or individual files? (folder/files) > "
         )
-        if input_type == "folder":
-            folder = filedialog.askdirectory(
-                title="Select folder containing HEIC files to convert."
-            )
-            convert_folder(folder)
-            break
-        elif input_type == "files":
-            files = filedialog.askopenfilenames(title="Select HEIC files to convert.")
-            convert_files(files)
-            break
-        elif input_type == "exit" or input_type == "quit":
-            break
-        else:
-            logging.info("Invalid input. Please enter 'folder' or 'files'.")
-            continue
+
+        match input_type.lower():
+            case "folder":
+                try:
+                    folder = filedialog.askdirectory(
+                        title="Select folder containing HEIC files to convert."
+                    )
+                    convert_folder(folder)
+                except FileNotFoundError:
+                    logging.info("Folder not found. Please try again.")
+                    continue
+                break
+            case "files":
+                files = filedialog.askopenfilenames(
+                    title="Select HEIC files to convert."
+                )
+                convert_files(files)
+                break
+            case "exit", "quit":
+                break
+            case _:
+                logging.info("Invalid input. Please enter 'folder' or 'files'.")
+                continue
 
     input("\nPress enter to exit.")
     exit()
